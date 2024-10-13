@@ -28,7 +28,7 @@ In the first step, it will be required to load the actual absorbance data, obtai
 
 For the purpose of this tutorial, I will provide the following example data, which can be loaded using the following command:
 
-```
+```r
 # Creating example data
 absorbance_data <- as.data(c(
   0.156, 0.200, 1.000, 0.950, 0.880, 0.930, 1.050, 1.020, 0.890, 0.980, 0.850, 0.060,  # Row A
