@@ -12,7 +12,7 @@ Currently the following assay formats are supported with this script:
 
 Please make sure to install the following R packages beforehand, as they will be required for the tutorial:
 
-```
+```r
 install.packages("devtools")
 install.packages("ggforce")
 install.packages("ggplot2")
