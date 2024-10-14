@@ -26,7 +26,13 @@ devtools::install_github("jpquast/ggplate")
 
 In the first step, it will be required to load the actual absorbance data, obtained via a spectrophotometer after microbial growth. In this workflow, we assume that the spectrophotometer read-out will be from a 96-well plate.
 
-For the purpose of this tutorial, I will provide the following example data, which can be loaded using the following command:
+For the purpose of this tutorial, let's assume that the layout of the 96-well plate is the following:
+
+![MICA](96-well_plate_example.png)
+
+Consequently, we assume that only one strain was tested for antimicrcobial resistance using **8 different antimicrobials (rows)** with **2-fold increasing concentrations (columns)**. The last two columns of the 96-well plate are a **Positive Control (PC)** and a **Negative Control (NC)**.
+
+The example data can be loaded using the following command:
 
 ```r
 # Creating example data
