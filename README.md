@@ -22,7 +22,7 @@ install.packages("tidyverse")
 devtools::install_github("jpquast/ggplate")
 ```
 
-## Import of Absorbance Data from Spectrophotometer
+## Import of absorbance data from spectrophotometer
 
 In the first step, it will be required to load the actual absorbance data, obtained via a spectrophotometer after microbial growth. In this workflow, we assume that the spectrophotometer read-out will be from a 96-well plate.
 
@@ -63,3 +63,39 @@ The loaded dataframe in R will look the following:
 | **6** | 0.098 | 0.250 | 1.020 | 1.000 | 0.950 | 1.010 | 1.030 | 0.940 | 0.880 | 0.870  | 1.060  | 0.093  |
 | **7** | 0.095 | 1.020 | 1.000 | 0.940 | 1.050 | 0.900 | 0.880 | 0.920 | 0.890 | 0.980  | 0.860  | 0.081  |
 | **8** | 0.099 | 0.093 | 0.180 | 0.910 | 0.970 | 0.880 | 0.860 | 0.930 | 1.050 | 0.890  | 1.020  | 0.078  |
+
+## Modify absorbance data for analysis and plotting
+
+Now that we have imported the absorbance data from the spectrophotometer, let's bring it into the right format by **adding the customized labels to the rows and columns** of our dataframe as in the example layout above: 
+
+```r
+custom_row_labels <- c("Amoxicillin", "Cefotaxime", "Chloramphenicol", 
+                       "Ciprofloxacin", "Nalidixic acid", "Streptomycin",
+                       "Tetracycline", "Trimethoprim")
+
+custom_col_labels <- c("0.25", "0.5", "1", "2", "4", "8",
+                       "16", "32", "64", "128", "PC", "NC")
+```
+
+For plotting and further analysis, we convert our dataframe into a long format using pivot_longer().
+
+```r
+df_plate <- df_plate %>%
+  pivot_longer(cols = everything(), names_to = "col", values_to = "value") %>%
+  mutate(row = rep(1:8, each = 12), col = factor(col, levels = paste0("V", 1:12), 
+  labels = custom_col_labels), row = factor(row, levels = 1:8, labels = custom_row_labels))
+
+# Quick check if data is in the right format
+head(df_plate)
+```
+
+Now we can plot the data and get some first insights on the MICs of our strain for the different antimicrobials tested.
+
+```r
+ggplot(data = df_plate) + 
+  geom_circle(aes(x0 = as.numeric(col), y0 = as.numeric(row), r = 0.45, fill = value), color = "grey30", size = 0.7) +
+  scale_x_continuous(breaks = 1:12, labels = custom_col_labels, expand = expansion(mult = c(0.01, 0.01))) +
+  scale_y_continuous(breaks = 1:8, labels = custom_row_labels, expand = expansion(mult = c(0.01, 0.01)), trans = reverse_trans()) +
+  scale_fill_gradient(low = "lightyellow", high = "orange") +
+  theme_minimal()
+```
