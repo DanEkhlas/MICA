@@ -110,7 +110,7 @@ ggplot(data = df_plate) +
 ```
 Let's have a quick look at the plot that we get from this script
 
-![MICA](96_well_plate_absorbance_data)
+![MICA](96_well_plate_absorbance_data.png)
 
 On first sight, we can see that all the **Positive Control (PC)** show bacterial growth while all the **Negative Control (NC)** have a very low abundance and seem to be clean free from contamination. We can quickly check this ourselves using the following functions:
 
