@@ -35,8 +35,15 @@ Consequently, we assume that only one strain was tested for antimicrcobial resis
 The example data can be loaded using the following command:
 
 ```r
+# Loading of R packages
+library(ggforce)
+library(ggplate)
+library(ggplot2)
+library(scales)
+library(tidyverse)
+
 # Creating example data
-absorbance_data <- as.data(c(
+absorbance_data <- matrix(c(
   0.156, 0.200, 1.000, 0.950, 0.880, 0.930, 1.050, 1.020, 0.890, 0.980, 0.850, 0.060,  # Row A
   0.172, 0.123, 0.102, 0.088, 0.112, 0.200, 1.000, 1.030, 0.950, 0.900, 0.880, 0.087,  # Row B
   0.094, 0.132, 0.150, 0.970, 1.050, 0.980, 1.020, 0.910, 0.890, 0.880, 1.060, 0.043,  # Row C
@@ -89,6 +96,8 @@ df_plate <- df_plate %>%
 head(df_plate)
 ```
 
+## First plot and quality control of positive and negative controls
+
 Now we can plot the data and get some first insights on the MICs of our strain for the different antimicrobials tested.
 
 ```r
@@ -99,3 +108,30 @@ ggplot(data = df_plate) +
   scale_fill_gradient(low = "lightyellow", high = "orange") +
   theme_minimal()
 ```
+Let's have a quick look at the plot that we get from this script
+
+![MICA](96-well_plate_absorbance_data.png)
+
+On first sight, we can see that all the **Positive Control (PC)** show bacterial growth while all the **Negative Control (NC)** have a very low abundance and seem to be clean free from contamination. We can quickly check this ourselves using the following functions:
+
+```r
+#Check overall values of positive controls
+pc_check <- subset(df_plate, col == "PC")
+summary(pc_check$value)
+```
+
+| Statistic | Min   | 1st Qu. | Median | Mean  | 3rd Qu. | Max   |
+|-----------|-------|---------|--------|-------|---------|-------|
+| Value     | 0.850 | 0.875   | 0.955  | 0.9563| 1.0375  | 1.060 |
+
+```r
+#Check overall values of negative controls
+pc_check <- subset(df_plate, col == "PC")
+summary(pc_check$value)
+```
+
+| Statistic | Min     | 1st Qu. | Median | Mean   | 3rd Qu. | Max     |
+|-----------|---------|---------|--------|--------|---------|---------|
+| Value     | 0.04300 | 0.07350 | 0.08400| 0.08013| 0.09425 | 0.10100 |
+
+We can see that the **PC with a mean value of 0.956** and the **NC with a mean value of 0.080** are quite reasonable and seem ok for our experiment.
