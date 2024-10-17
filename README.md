@@ -73,8 +73,8 @@ custom_row_labels <- c("Amoxicillin", "Cefotaxime", "Chloramphenicol",
                        "Ciprofloxacin", "Nalidixic acid", "Streptomycin",
                        "Tetracycline", "Trimethoprim")
 
-custom_col_labels <- c("0.25", "0.5", "1", "2", "4", "8",
-                       "16", "32", "64", "128", "PC", "NC")
+custom_col_labels <- c("128", "64", "32", "16", "8", "4",
+                       "2", "1", "0.5", "0.25", "PC", "NC")
 ```
 
 For plotting and further analysis, we convert our dataframe into a long format using pivot_longer().
