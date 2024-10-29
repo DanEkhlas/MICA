@@ -135,3 +135,41 @@ summary(pc_check$value)
 | Value     | 0.04300 | 0.07350 | 0.08400| 0.08013| 0.09425 | 0.10100 |
 
 We can see that the **PC with a mean value of 0.956** and the **NC with a mean value of 0.080** are quite reasonable and seem ok for our experiment.
+
+## Extraction of minimal inhibitory concentrations for all antimicrobials
+
+A common approach in microbiology is to establish a threshold of absorbance to differentiate between growth and no growth. In this case, we set the **threshold at 20% of the absorbance of the positive control**. This allows us to conclude that wells with absorbance values below this threshold indicate no growth.
+
+```r
+#Define the no-growth threshold as 20% of the positive control mean absorbance
+pc_mean <- mean(pc_check$value)
+no_growth_threshold <- pc_mean*0.2
+```
+
+The threshold value we established for defining no growth is a **maximum absorbance of 0.19125**. Using this value, we can eliminate all wells with absorbance greater than this threshold. Subsequently, we can utilize the reduced dataframe to extract the MIC values.
+
+```r
+#Extracting MIC values for different antimicrobials
+mic_values <- no_growth_threshold %>%
+  group_by(row) %>%
+  slice_min(col, with_ties = FALSE) %>%
+  ungroup()
+
+#Rename columns
+names(mic_values)[names(mic_values) == "col"] <- "Concentration (µg/mL)"
+names(mic_values)[names(mic_values) == "row"] <- "Antimicrobial"
+names(mic_values)[names(mic_values) == "value"] <- "Absorbance"
+```
+
+By eliminating the lower concentrations that exhibited growth, we can now extract the **lowest concentrations for each antimicrobial** that show no growth. These concentrations represent our **minimal inhibitory concentrations (MICs)**. The output of our analysis can be seen below:
+
+| Concentration (µg/mL) | Absorbance | Antimicrobial     |
+|-----------------------|------------|--------------------|
+| 128                   | 0.156      | Amoxicillin        |
+| 8                     | 0.112      | Cefotaxime         |
+| 32                    | 0.150      | Chloramphenicol     |
+| 32                    | 0.100      | Ciprofloxacin      |
+| 16                    | 0.094      | Nalidixic acid     |
+| 128                   | 0.098      | Streptomycin       |
+| 128                   | 0.095      | Tetracycline       |
+| 32                    | 0.180      | Trimethoprim       |
