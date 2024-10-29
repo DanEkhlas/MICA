@@ -80,6 +80,8 @@ custom_row_labels <- c("Amoxicillin", "Cefotaxime", "Chloramphenicol",
                        "Ciprofloxacin", "Nalidixic acid", "Streptomycin",
                        "Tetracycline", "Trimethoprim")
 
+#custom_row_labels <- c("AMX", "CTX", "CHL", "CIP", "NAL", "STR","TET", "SXT")
+
 custom_col_labels <- c("128", "64", "32", "16", "8", "4",
                        "2", "1", "0.5", "0.25", "PC", "NC")
 ```
@@ -173,3 +175,26 @@ By eliminating the lower concentrations that exhibited growth, we can now extrac
 | 128                   | 0.098      | Streptomycin       |
 | 128                   | 0.095      | Tetracycline       |
 | 32                    | 0.180      | Trimethoprim       |
+
+If we are checking MICs for non-clinical antimicrobials or heavy metals, this may be sufficient, as we cannot compare these results with clinical breakpoints. However, if you want to assess clinical breakpoints for clinical antimicrobials, we can use the approach outlined below using the AMR package.
+
+## Compare MIC results with clinical breakpoints of the AMR package
+
+
+
+df_breakpoints <- clinical_breakpoints
+
+df_breakpoints2 <- subset(df_breakpoints, mo == "B_ESCHR_COLI" & 
+                            guideline == "EUCAST 2023" & type == "ECOFF" &
+                            method == "MIC")
+
+resistance_eval <- merge(mic_values, df_breakpoints2, by.x = "Antimicrobial", by.y = "ab", all.x = TRUE)
+
+resistance_eval <- resistance_eval %>%
+  mutate(
+    Resistance_profile = case_when(
+      "Concentration (µg/mL)" < breakpoint_S ~ "S",
+      "Concentration (µg/mL)" >= breakpoint_R ~ "R",
+      TRUE ~ NA_character_  # Optional: in case neither condition is met
+    )
+  )
