@@ -38,8 +38,7 @@ In the first step, it will be required to load the actual absorbance data, obtai
 
 For the purpose of this tutorial, let's assume that the layout of the 96-well plate is the following:
 
-<img align="left" width="100" height="100" src="96-well_plate_example.png">
-![MICA](96-well_plate_example.png)
+<img align="center" width="600" height="600" src="96-well_plate_example.png">
 
 Consequently, we assume that only one strain was tested for antimicrcobial resistance using **8 different antimicrobials (rows)** with **2-fold increasing concentrations (columns)**. The last two columns of the 96-well plate are a **Positive Control (PC)** and a **Negative Control (NC)**.
 
