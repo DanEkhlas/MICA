@@ -2,22 +2,32 @@
 
 MICA is a workflow for minimal inhibitory concentration (MIC) analysis in R. The goal of this workflow is to allow users the easy assessment of antimicrobial resistance profiles of their lab strains. More information on MICs can be found in the STAR protocol by [Barnes et al., 2023](https://www.sciencedirect.com/science/article/pii/S2666166723004793).
 
-Currently the following assay formats are supported with this script:
+The MICA workflow is designed for **MIC assays** conducted in **96-well plates**, utilizing a **specified concentration range** across different antimicrobials. While the workflow is tailored to this setup, it **can be adapted to fit alternative MIC assay** specifications if needed. For this example, we assume the following layout:
 
 - **Plate size:**                               96-well plates
-- **Antimicrobial concentrations (columns):**   2-fold and customizable
-- **Assay layout:**                             multiple strains & one antimicrobial / one strain & multiple antimicrobials
+- **Antimicrobial concentrations (columns):**   2-fold concentration changes
+- **Organisms tested:**                         1 simulated *Escherichia coli* strain from non-human origin
+- **Antimicrobials tested:**                    Amoxicillin (AMX)
+                                                Chloramphenicol (CHL)
+                                                Ciprofloxacin (CIP)
+                                                Cefotaxime (CTX)
+                                                Nalidixic acid (NAL)
+                                                Streptomycin (STR)
+                                                Trimethoprim/Sulfamethoxazole (SXT)
+                                                Tetracycline (TCY)
 
 ## Pre-requisites required
 
 Please make sure to install the following R packages beforehand, as they will be required for the tutorial:
 
 ```r
+install.packages("AMR")
 install.packages("devtools")
 install.packages("ggforce")
 install.packages("ggplot2")
 install.packages("scales")
 install.packages("tidyverse")
+install.packages("viridis")
 
 devtools::install_github("jpquast/ggplate")
 ```
@@ -44,13 +54,13 @@ library(tidyverse)
 
 # Creating example data
 absorbance_data <- matrix(c(
-  0.156, 0.200, 1.000, 0.950, 0.880, 0.930, 1.050, 1.020, 0.890, 0.980, 0.850, 0.060,  # Row A
-  0.172, 0.123, 0.102, 0.088, 0.112, 0.200, 1.000, 1.030, 0.950, 0.900, 0.880, 0.087,  # Row B
-  0.094, 0.132, 0.150, 0.970, 1.050, 0.980, 1.020, 0.910, 0.890, 0.880, 1.060, 0.043,  # Row C
-  0.095, 0.103, 0.100, 0.980, 1.020, 0.980, 0.890, 0.870, 0.910, 0.950, 1.030, 0.101,  # Row D
-  0.092, 0.095, 0.097, 0.094, 0.300, 1.030, 0.870, 0.910, 0.900, 1.050, 0.890, 0.098,  # Row E
-  0.098, 0.250, 1.020, 1.000, 0.950, 1.010, 1.030, 0.940, 0.880, 0.870, 1.060, 0.093,  # Row F
-  0.095, 1.020, 1.000, 0.940, 1.050, 0.900, 0.880, 0.920, 0.890, 0.980, 0.860, 0.081,  # Row G
+  0.019, 0.040, 1.000, 0.950, 0.880, 0.930, 1.050, 1.020, 0.890, 0.980, 0.850, 0.060,  # Row A
+  0.008, 0.079, 0.033, 0.008, 0.002, 0.200, 1.000, 1.030, 0.950, 0.900, 0.880, 0.087,  # Row B
+  0.022, 0.043, 0.023, 0.970, 1.050, 0.980, 1.020, 0.910, 0.890, 0.880, 1.060, 0.043,  # Row C
+  0.013, 0.007, 0.009, 0.007, 1.020, 0.980, 0.890, 0.870, 0.910, 0.950, 1.030, 0.101,  # Row D
+  0.015, 0.013, 0.032, 0.056, 0.030, 0.021, 0.870, 0.910, 0.900, 1.050, 0.890, 0.098,  # Row E
+  0.008, 0.022, 0.014, 0.009, 0.011, 1.010, 1.030, 0.940, 0.880, 0.870, 1.060, 0.093,  # Row F
+  0.007, 0.005, 0.011, 0.003, 0.005, 0.009, 0.019, 0.010, 0.004, 0.033, 0.860, 0.081,  # Row G
   0.099, 0.093, 0.180, 0.910, 0.970, 0.880, 0.860, 0.930, 1.050, 0.890, 1.020, 0.078   # Row H
 ), nrow = 8, ncol = 12, byrow = TRUE)
 
@@ -76,17 +86,13 @@ The loaded dataframe in R will look the following:
 Now that we have imported the absorbance data from the spectrophotometer, let's bring it into the right format by **adding the customized labels to the rows and columns** of our dataframe as in the example layout above: 
 
 ```r
-custom_row_labels <- c("Amoxicillin", "Cefotaxime", "Chloramphenicol", 
-                       "Ciprofloxacin", "Nalidixic acid", "Streptomycin",
-                       "Tetracycline", "Trimethoprim")
-
-#custom_row_labels <- c("AMX", "CTX", "CHL", "CIP", "NAL", "STR","TET", "SXT")
+custom_row_labels <- c("AMX", "CHL", "CIP", "CTX", "NAL", "STR","SXT", "TCY")
 
 custom_col_labels <- c("128", "64", "32", "16", "8", "4",
                        "2", "1", "0.5", "0.25", "PC", "NC")
 ```
 
-For plotting and further analysis, we convert our dataframe into a long format using pivot_longer().
+Please note, to enable comparison with EUCAST or CLSI clinical breakpoints, use antimicrobial abbreviations as `custom_row_labels`. If guideline comparison is not needed, feel free to choose any labeling that best suits your assay setup. For plotting and further analysis, convert the dataframe into a long format using pivot_longer().
 
 ```r
 df_plate <- df_plate %>%
@@ -112,7 +118,7 @@ ggplot(data = df_plate) +
 ```
 Let's have a quick look at the plot that we get from this script
 
-![MICA](96_well_plate_absorbance_data.png)
+![MICA](96_well_plate_absorbance_data.png) # has still to be corrected!!!
 
 On first sight, we can see that all the **Positive Control (PC)** show bacterial growth while all the **Negative Control (NC)** have a very low abundance and seem to be clean free from contamination. We can quickly check this ourselves using the following functions:
 
@@ -140,12 +146,12 @@ We can see that the **PC with a mean value of 0.956** and the **NC with a mean v
 
 ## Extraction of minimal inhibitory concentrations for all antimicrobials
 
-A common approach in microbiology is to establish a threshold of absorbance to differentiate between growth and no growth. In this case, we set the **threshold at 20% of the absorbance of the positive control**. This allows us to conclude that wells with absorbance values below this threshold indicate no growth.
+A common approach in microbiology is to establish a threshold of absorbance to differentiate between growth and no growth. In this case, we set the **threshold at 10% of the absorbance of the positive control**. This allows us to conclude that wells with absorbance values below this threshold indicate no growth.
 
 ```r
 #Define the no-growth threshold as 20% of the positive control mean absorbance
 pc_mean <- mean(pc_check$value)
-no_growth_threshold <- pc_mean*0.2
+no_growth_threshold <- pc_mean*0.1
 ```
 
 The threshold value we established for defining no growth is a **maximum absorbance of 0.19125**. Using this value, we can eliminate all wells with absorbance greater than this threshold. Subsequently, we can utilize the reduced dataframe to extract the MIC values.
@@ -165,36 +171,42 @@ names(mic_values)[names(mic_values) == "value"] <- "Absorbance"
 
 By eliminating the lower concentrations that exhibited growth, we can now extract the **lowest concentrations for each antimicrobial** that show no growth. These concentrations represent our **minimal inhibitory concentrations (MICs)**. The output of our analysis can be seen below:
 
-| Concentration (µg/mL) | Absorbance | Antimicrobial     |
+| Concentration (µg/mL) | Absorbance | Antimicrobial      |
 |-----------------------|------------|--------------------|
-| 128                   | 0.156      | Amoxicillin        |
-| 8                     | 0.112      | Cefotaxime         |
-| 32                    | 0.150      | Chloramphenicol     |
-| 32                    | 0.100      | Ciprofloxacin      |
-| 16                    | 0.094      | Nalidixic acid     |
-| 128                   | 0.098      | Streptomycin       |
-| 128                   | 0.095      | Tetracycline       |
-| 32                    | 0.180      | Trimethoprim       |
+| 64                    | 0.04       | AMX                |
+| 8                     | 0.002      | CHL                |
+| 32                    | 0.023      | CIP                |
+| 16                    | 0.007      | CTX                |
+| 4                     | 0.021      | NAL                |
+| 8                     | 0.011      | STR                |
+| 0.25                  | 0.033      | SXT                |
+| 64                    | 0.093      | TCY                |
 
 If we are checking MICs for non-clinical antimicrobials or heavy metals, this may be sufficient, as we cannot compare these results with clinical breakpoints. However, if you want to assess clinical breakpoints for clinical antimicrobials, we can use the approach outlined below using the AMR package.
 
 ## Compare MIC results with clinical breakpoints of the AMR package
 
+Clinical breakpoints are already part of the **AMR package** and can be eloaded using the `clinical_breakpoints` command. Now let us compare our MICs with the **clinical breakpoints** to determine **resistance and susceptibility of the tested strain**. For this, we will need to subset all clinical breakpoints to our needs. In this example, we have and *Escherichia coli* (`mo`) strain from *non-human origin* (`type`), and we will compare our MICs (`method`) with the latest EUCAST breakpoints from 2023 (`guideline`). See also script below:
 
-
+```r
+#Using clinical breakpoints of the AMR package
 df_breakpoints <- clinical_breakpoints
 
+#Subsetting of all clinical breakpoints
 df_breakpoints2 <- subset(df_breakpoints, mo == "B_ESCHR_COLI" & 
                             guideline == "EUCAST 2023" & type == "ECOFF" &
                             method == "MIC")
 
-resistance_eval <- merge(mic_values, df_breakpoints2, by.x = "Antimicrobial", by.y = "ab", all.x = TRUE)
+#Merge our MICs with selected clinical breakpoints for comparison
+resistance_profiles <- merge(mic_values, df_breakpoints2, by.x = "Antimicrobial", by.y = "ab", all.x = TRUE)
 
-resistance_eval <- resistance_eval %>%
+#Determine resistance and susceptibility with the following function
+resistance_profiles <- resistance_profiles %>%
+  rowwise() %>%
   mutate(
     Resistance_profile = case_when(
-      "Concentration (µg/mL)" < breakpoint_S ~ "S",
-      "Concentration (µg/mL)" >= breakpoint_R ~ "R",
-      TRUE ~ NA_character_  # Optional: in case neither condition is met
-    )
-  )
+      `Concentration (µg/mL)` < breakpoint_S ~ "S",
+      `Concentration (µg/mL)` >= breakpoint_R ~ "R")) %>%
+  ungroup()
+```
+
