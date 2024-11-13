@@ -21,16 +21,18 @@ The MICA workflow is designed for **MIC assays** conducted in **96-well plates**
 Please make sure to install the following R packages beforehand, as they will be required for the tutorial:
 
 ```r
-install.packages("AMR")
-install.packages("devtools")
-install.packages("ggforce")
-install.packages("ggplot2")
-install.packages("reshape2")
-install.packages("scales")
-install.packages("tidyverse")
-install.packages("viridis")
+#Install packages               # R v4.4.1 (used for this tutorial)
 
-devtools::install_github("jpquast/ggplate")
+install.packages("AMR")         # v2.1.1
+install.packages("devtools")    # v2.4.5
+install.packages("ggforce")     # v0.4.2
+install.packages("ggplot2")     # v3.5.1
+install.packages("reshape2")    # v1.4.4
+install.packages("scales")      # v1.3.0
+install.packages("tidyverse")   # v2.0.0
+install.packages("viridis")     # v0.6.5
+
+devtools::install_github("jpquast/ggplate") # v0.1.5
 ```
 
 ## Import of absorbance data from spectrophotometer
@@ -168,7 +170,7 @@ summary(pc_check$value)
 |-----------|---------|---------|--------|--------|---------|---------|
 | Value     | 0.04300 | 0.07350 | 0.08400| 0.08013| 0.09425 | 0.10100 |
 
-We can see that the **PC with a mean value of 0.956** and the **NC with a mean value of 0.080** are quite reasonable and seem ok for our experiment.
+We can see that the **PC with a mean value of 0.956** and the **NC with a mean value of 0.080** are quite reasonable and seem ok for our experiment. Please note that evaluation of the results as well as potential contamination will further require the expertise of the user.
 
 ## Extraction of minimal inhibitory concentrations for all antimicrobials
 
@@ -227,12 +229,30 @@ df_breakpoints2 <- subset(df_breakpoints, mo == "B_ESCHR_COLI" &
 resistance_profiles <- merge(mic_values, df_breakpoints2, by.x = "Antimicrobial", by.y = "ab", all.x = TRUE)
 
 #Determine resistance and susceptibility with the following function
-resistance_profiles <- resistance_profiles %>%
+resistance_eval <- resistance_eval %>%
   rowwise() %>%
   mutate(
     Resistance_profile = case_when(
-      `Concentration (µg/mL)` < breakpoint_S ~ "S",
-      `Concentration (µg/mL)` >= breakpoint_R ~ "R")) %>%
+      `Concentration (µg/mL)` < breakpoint_S ~ "Susceptible",
+      `Concentration (µg/mL)` >= breakpoint_R ~ "Resistant")) %>%
   ungroup()
+
+#Extraction and export of results
+df_mic_results <- resistance_eval[c(1:6, 8, 12:15)]
+write.csv(df_mic_results, "df_mic_results.csv", row.names = FALSE)
 ```
 
+After the resistance and susceptibility of our *E. coli* strain was determined and our results exported, let's have a quick look at the resistance profiles.
+
+| #  | Antimicrobial | Concentration (µg/mL) | Absorbance | guideline   | type  | method | mo              | breakpoint_S | breakpoint_R | uti   | Resistance_profile |
+|----|---------------|-----------------------|------------|-------------|-------|--------|-----------------|--------------|--------------|-------|--------------------|
+| 1  | AMX           | 64.00                 | 0.040      | EUCAST 2023 | ECOFF | MIC    | B_ESCHR_COLI    | 8.000        | 8.000        | FALSE | Resistant                  |
+| 2  | CHL           | 8.00                  | 0.002      | EUCAST 2023 | ECOFF | MIC    | B_ESCHR_COLI    | 16.000       | 16.000       | FALSE | Susceptible                  |
+| 3  | CIP           | 32.00                 | 0.023      | EUCAST 2023 | ECOFF | MIC    | B_ESCHR_COLI    | 0.064        | 0.064        | FALSE | Resistant                  |
+| 4  | CTX           | 16.00                 | 0.007      | EUCAST 2023 | ECOFF | MIC    | B_ESCHR_COLI    | 0.250        | 0.250        | FALSE | Resistant                  |
+| 5  | NAL           | 4.00                  | 0.021      | EUCAST 2023 | ECOFF | MIC    | B_ESCHR_COLI    | 8.000        | 8.000        | FALSE | Susceptible                  |
+| 6  | STR           | 8.00                  | 0.011      | EUCAST 2023 | ECOFF | MIC    | B_ESCHR_COLI    | 16.000       | 16.000       | FALSE | Susceptible                  |
+| 7  | SXT           | 0.25                  | 0.033      | EUCAST 2023 | ECOFF | MIC    | B_ESCHR_COLI    | 0.500        | 0.500        | FALSE | Susceptible                  |
+| 8  | TCY           | 64.00                 | 0.093      | EUCAST 2023 | ECOFF | MIC    | B_ESCHR_COLI    | 8.000        | 8.000        | FALSE | Resistant                  |
+
+In this simulated example, our *E. coli* strain showed resistance to amoxicillin, ciprofloxacin, cefotaxime, and tetracycline.
