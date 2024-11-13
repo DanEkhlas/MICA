@@ -40,7 +40,7 @@ In the first step, it will be required to load the actual absorbance data, obtai
 For the purpose of this tutorial, let's assume that the layout of the 96-well plate is the following:
 
 <p align="center">
-  <img width="600" height="473" src="96-well_plate_example.png">
+  <img width="600" height="473" src="plots/96-well_plate_example.png">
 </p>
 
 In this example, only one *E. coli* strain was tested for antimicrcobial resistance using **8 different antimicrobials (rows)** with **2-fold increasing concentrations (columns)**. The last two columns of the 96-well plate are a **Positive Control (PC)** and a **Negative Control (NC)**.
@@ -143,7 +143,7 @@ ggplot(data = df_plate) +
 Let's have a quick look at the plot that we get from this script
 
 <p align="center">
-  <img width="600" height="416" src="96_well_plate_absorbance_data.png">
+  <img width="600" height="416" src="plots/96_well_plate_absorbance_data.png">
 </p>
 
 On first sight, we can see that all the **Positive Control (PC)** show bacterial growth while all the **Negative Control (NC)** have a very low abundance and seem to be clean free from contamination. We can quickly check this ourselves using the following functions:
