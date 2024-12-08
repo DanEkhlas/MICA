@@ -45,7 +45,7 @@ For the purpose of this tutorial, let's assume that the layout of the 96-well pl
   <img width="600" height="473" src="plots/96-well_plate_example.png">
 </p>
 
-In this example, only one *E. coli* strain was tested for antimicrcobial resistance using **8 different antimicrobials (rows)** with **2-fold increasing concentrations (columns)**. The last two columns of the 96-well plate are a **Positive Control (PC)** and a **Negative Control (NC)**.
+In this example, only one *E. coli* strain was tested for antimicrcobial resistance using **8 different antimicrobials (rows)** with **2-fold increasing concentrations (columns)**. The last two columns of the 96-well plate are **Positive Controls (PC)** and **Negative Controls (NC)**.
 
 The example data can be loaded using the following command:
 
@@ -90,7 +90,7 @@ The loaded dataframe in R will look the following:
 
 ## Modify absorbance data for analysis and plotting
 
-Now that we have imported the absorbance data from the spectrophotometer, let's bring it into the right format by **adding the customized labels to the rows and columns** of our dataframe as in the example layout above: 
+Now that we have simulated absorbance data from the spectrophotometer, let's bring it into the right format by **adding the customized labels to the rows and columns** of our dataframe as in the example layout above: 
 
 ```r
 custom_row_labels <- c("AMX", "CHL", "CIP", "CTX", "NAL", "STR","SXT", "TCY")
@@ -99,7 +99,7 @@ custom_col_labels <- c("128", "64", "32", "16", "8", "4",
                        "2", "1", "0.5", "0.25", "PC", "NC")
 ```
 
-Please note, to enable comparison with EUCAST or CLSI clinical breakpoints, use antimicrobial abbreviations as `custom_row_labels`. If guideline comparison is not needed, feel free to choose any labeling that best suits your assay setup. For plotting and further analysis, convert the dataframe into a long format using pivot_longer().
+Please note, to enable comparison with EUCAST or CLSI clinical breakpoints, use antimicrobial abbreviations as `custom_row_labels`. If EUCAST or CLSI guideline comparison is not needed, feel free to choose any labeling that best suits your assay setup. For plotting and further analysis, convert the dataframe into a long format using pivot_longer().
 
 ## Importing your own data
 
@@ -118,7 +118,11 @@ colnames(absorbance_data) <- paste0("V", 1:12)
 
 df_plate <- absorbance_data
 ```
-Now the absorbance data is in the format for plotting and further processing. From here, all steps are the same for simulated and imported data.
+Now the absorbance data is in the format for plotting and further processing.
+
+## First plot and quality control of positive and negative controls
+
+From here, all steps are the same for simulated and imported data. Let's bring it in the right format for plotting.
 
 ```r
 df_plate <- df_plate %>%
@@ -130,9 +134,7 @@ df_plate <- df_plate %>%
 head(df_plate)
 ```
 
-## First plot and quality control of positive and negative controls
-
-Now we can plot the data and get some first insights on the MICs of our strain for the different antimicrobials tested.
+We can plot the data and get some first insights on the MICs of our strain for the different antimicrobials tested.
 
 ```r
 ggplot(data = df_plate) + 
@@ -148,7 +150,7 @@ Let's have a quick look at the plot that we get from this script
   <img width="600" height="416" src="plots/96_well_plate_absorbance_data.png">
 </p>
 
-On first sight, we can see that all the **Positive Control (PC)** show bacterial growth while all the **Negative Control (NC)** have a very low abundance and seem to be clean free from contamination. We can quickly check this ourselves using the following functions:
+On first sight, we can see that all the **Positive Controls (PC)** show bacterial growth while all the **Negative Controls (NC)** have a very low abundance and seem to be clean free from contamination. We can quickly check this ourselves using the following functions:
 
 ```r
 #Check overall values of positive controls
@@ -170,11 +172,11 @@ summary(pc_check$value)
 |-----------|---------|---------|--------|--------|---------|---------|
 | Value     | 0.04300 | 0.07350 | 0.08400| 0.08013| 0.09425 | 0.10100 |
 
-We can see that the **PC with a mean value of 0.956** and the **NC with a mean value of 0.080** are quite reasonable and seem ok for our experiment. Please note that evaluation of the results as well as potential contamination will further require the expertise of the user.
+We can see that the **PC with a mean value of 0.956** and the **NC with a mean value of 0.080** are quite reasonable for our experiment. Please note that evaluation of the results as well as potential contamination will require the further expertise of the user.
 
 ## Extraction of minimal inhibitory concentrations for all antimicrobials
 
-A common approach in microbiology is to establish a threshold of absorbance to differentiate between growth and no growth. In this case, we set the **threshold at 10% of the absorbance of the positive control**. This allows us to conclude that wells with absorbance values below this threshold indicate no growth.
+A common approach in microbiology is to establish a threshold of absorbance to differentiate between growth and no growth. In this case, we set the **threshold at 10% of the absorbance of the positive controls**. This allows us to conclude that wells with absorbance values below this threshold indicate no growth.
 
 ```r
 #Define the no-growth threshold as 20% of the positive control mean absorbance
@@ -197,7 +199,7 @@ names(mic_values)[names(mic_values) == "row"] <- "Antimicrobial"
 names(mic_values)[names(mic_values) == "value"] <- "Absorbance"
 ```
 
-By eliminating the lower concentrations that exhibited growth, we can now extract the **lowest concentrations for each antimicrobial** that show no growth. These concentrations represent our **minimal inhibitory concentrations (MICs)**. The output of our analysis can be seen below:
+By eliminating the lower concentrations that exhibited growth, we can now extract the **lowest concentrations for each antimicrobial that show no growth**. These concentrations represent our **minimal inhibitory concentrations (MICs)**. The output of our analysis can be seen below:
 
 | MIC (µg/mL) | Absorbance | Antimicrobial      |
 |-----------------------|------------|--------------------|
@@ -210,11 +212,11 @@ By eliminating the lower concentrations that exhibited growth, we can now extrac
 | 0.25                  | 0.033      | SXT                |
 | 64                    | 0.093      | TCY                |
 
-If we are checking MICs for non-clinical antimicrobials or heavy metals, this may be sufficient, as we cannot compare these results with clinical breakpoints. However, if you want to assess clinical breakpoints for clinical antimicrobials, we can use the approach outlined below using the AMR package.
+If we are checking MICs for non-clinical antimicrobials or heavy metals, this may be sufficient, as we cannot compare these results with clinical breakpoints published by EUCAST or CLSI. However, for assessing clinical breakpoints for antimicrobials, we can use the approach outlined below using the **AMR package**.
 
 ## Compare MIC results with clinical breakpoints of the AMR package
 
-Clinical breakpoints are already part of the **AMR package** and can be eloaded using the `clinical_breakpoints` command. Now let us compare our MICs with the **clinical breakpoints** to determine **resistance and susceptibility of the tested strain**. For this, we will need to subset all clinical breakpoints to our needs. In this example, we have and *Escherichia coli* (`mo`) strain from *non-human origin* (`type`), and we will compare our MICs (`method`) with the latest EUCAST breakpoints from 2023 (`guideline`). See also script below:
+Clinical breakpoints are already part of the **AMR package** and can be loaded using the `clinical_breakpoints` command. Now let us compare our MICs with the **clinical breakpoints** to determine **resistance and susceptibility of the tested strain**. For this, we will need to subset all clinical breakpoints to our needs. In this example, we have an *Escherichia coli* (`mo`) strain from *non-human origin* (`type`), and we will compare our MICs (`method`) with the latest EUCAST breakpoints from 2023 (`guideline`). See also script below:
 
 ```r
 #Using clinical breakpoints of the AMR package
